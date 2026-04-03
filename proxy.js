@@ -70,4 +70,5 @@ const server = http.createServer((req, res) => {
   res.writeHead(404); res.end("Not found");
 });
 
-server.listen(3456, () => console.log("🚀 Proxy sur http://localhost:3456"));
+const PORT = process.env.PORT || 3456;
+server.listen(PORT, () => console.log("🚀 Proxy sur port", PORT));
