@@ -7,7 +7,7 @@ let ws = null;
 
 function connectPO() {
   if (!ssid) return;
-  ws = new WebSocket("wss://ws2.pocket-option.com/socket.io/?EIO=4&transport=websocket");
+  ws = new WebSocket("wss://api-l.po.market/socket.io/?EIO=4&transport=websocket");
 
   ws.on("open", () => {
     console.log("✅ Connecté à Pocket Option");
