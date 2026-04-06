@@ -7,7 +7,13 @@ let ws = null;
 
 function connectPO() {
   if (!ssid) return;
-  ws = new WebSocket("wss://api-l.po.market/socket.io/?EIO=4&transport=websocket");
+  ws = new WebSocket("wss://api-l.po.market/socket.io/?EIO=4&transport=websocket", {
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    'Origin': 'https://pocket-option.com',
+    'Cookie': `ssid=${ssid}`
+  }
+});
 
   ws.on("open", () => {
     console.log("✅ Connecté à Pocket Option");
