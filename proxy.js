@@ -7,13 +7,15 @@ let ws = null;
 
 function connectPO() {
   if (!ssid) return;
+  const { HttpsProxyAgent } = require('https-proxy-agent');
+  const proxyAgent = new HttpsProxyAgent('http://USERNAME:PASSWORD@IP:PORT');
   ws = new WebSocket("wss://api-l.po.market/socket.io/?EIO=4&transport=websocket", {
-  headers: {
-    
-    'Origin': 'https://pocket-option.com',
-    'Cookie': `ssid=${ssid}`
-  }
-});
+    agent: proxyAgent,
+    headers: {
+      'Origin': 'https://pocket-option.com',
+      'Cookie': `ssid=${ssid}`
+    }
+  });
 
   ws.on("open", () => {
     console.log("✅ Connecté à Pocket Option");
