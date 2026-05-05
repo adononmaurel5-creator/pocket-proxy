@@ -8,7 +8,7 @@ let ws = null;
 function connectPO() {
   if (!ssid) return;
   const { HttpsProxyAgent } = require('https-proxy-agent');
-  const proxyAgent = new HttpsProxyAgent('isp.decodo.com:10001:sppybtyyps:uckovdS5Dy55_5oUsJ');
+  const proxyAgent = new HttpsProxyAgent('https://sppybtyyps:uckovdS5Dy55_5oUsJ@isp.decodo.com:10001');
   ws = new WebSocket("wss://api-l.po.market/socket.io/?EIO=4&transport=websocket", {
     agent: proxyAgent,
     headers: {
