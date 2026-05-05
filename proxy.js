@@ -48,7 +48,7 @@ function connectPO() {
     setTimeout(connectPO, 5000);
   });
 
-  ws.on("error", (err) => console.error("Erreur WS:", err.message));
+  ws.on("error", (err) => console.error("Erreur WS:", err.message, err.code, JSON.stringify(err)));
 }
 
 const server = http.createServer((req, res) => {
