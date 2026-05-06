@@ -13,7 +13,9 @@ function connectPO() {
     agent: proxyAgent,
     headers: {
       'Origin': 'https://pocket-option.com',
-      'Cookie': `ssid=${ssid}`
+      'Cookie': `ssid=${ssid}`,
+      'Referer': 'https://pocket-option.com/trading',
+      'Sec-WebSocket-Protocol': 'websocket'
     }
   });
 
