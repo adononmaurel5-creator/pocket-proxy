@@ -8,8 +8,9 @@ let ws = null;
 function connectPO() {
   if (!ssid) return;
   const { HttpsProxyAgent } = require('https-proxy-agent');
-  const proxyAgent = new HttpsProxyAgent('https://sppybtyyps:uckovdS5Dy55_5oUsJ@isp.decodo.com:10001');
+  const proxyAgent = new HttpsProxyAgent('https://spjfzd4lq7:7Bt17qtmtil4Ft_wIN@gate.decodo.com:7000');
   ws = new WebSocket("wss://ws2.pocket-option.com/socket.io/?EIO=4&transport=websocket", {
+    agent: proxyAgent,
     headers: {
       'Origin': 'https://pocket-option.com',
       'Cookie': `ssid=${ssid}`
