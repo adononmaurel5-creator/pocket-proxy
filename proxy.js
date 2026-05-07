@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Proxy Decodo (votre proxy résidentiel)
-const PROXY_URL = 'https://spjfzd4lq7:7Bt17qtmtil4Ft_wIN@gate.decodo.com:7000';
+const PROXY_URL = 'http://spjfzd4lq7:7Bt17qtmtil4Ft_wIN@gate.decodo.com:10004';
 const proxyAgent = new HttpsProxyAgent(PROXY_URL);
 
 // Identifiants Pocket Option (à définir sur Render, PAS dans le code)
