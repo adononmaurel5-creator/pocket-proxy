@@ -12,7 +12,7 @@ const CI_SESSION = "a%3A4%3A%7Bs%3A10%3A%22session_id%22%3Bs%3A32%3A%22f36579ce1
 const AUTOLOGIN = "a%3A2%3A%7Bs%3A6%3A%22key_id%22%3Bs%3A16%3A%2219b7f421d8d9e912%22%3Bs%3A7%3A%22user_id%22%3Bs%3A8%3A%2299154142%22%3B%7D";
 const USER_AGENT = "Mozilla/5.0 (Android 13; Mobile; rv:150.0) Gecko/150.0 Firefox/150.0";
 
-// ✅ PROXY DECODO ISP STATIQUE (mot de passe correct : lQ4iibFeya87QSd6_e)
+// ✅ PROXY DECODO ISP STATIQUE
 const PROXY_URL = 'http://spr5gith3k:lQ4iibFeya87QSd6_e@isp.decodo.com:10007';
 const proxyAgent = new HttpsProxyAgent(PROXY_URL);
 
@@ -23,7 +23,8 @@ function connectPO() {
   if (ws) return;
 
   console.log('🔵 Connexion WebSocket...');
-  ws = new WebSocket("wss://api-l.po.market/socket.io/?EIO=4&transport=websocket", {
+  // Utilisation de l'URL précise avec le bon endpoint et le paramètre EIO
+  ws = new WebSocket("wss://ws-l.po.market/socket.io/?EIO=4&transport=websocket", {
     agent: proxyAgent,
     headers: {
       'Origin': 'https://pocketoption.com',
@@ -79,5 +80,4 @@ app.get('/', (req, res) => res.send('Pocket Proxy v2 actif'));
 connectPO();
 
 const PORT = process.env.PORT || 3456;
-app.listen(PORT, () => console.log(`🚀 Proxy prêt sur port ${PORT}`));  
-  
+app.listen(PORT, () => console.log(`🚀 Proxy prêt sur port ${PORT}`));
