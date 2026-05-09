@@ -1,7 +1,5 @@
-  
-  const express = require('express');
+const express = require('express');
 const cors = require('cors');
-const axios = require('axios');
 const WebSocket = require('ws');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 
@@ -9,81 +7,28 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Identifiants Decodo (session statique)
-const PROXY_URL = 'https://spr5gith3k:lQ4iibFeya87QSd6_e@isp.decodo.com:10007';
+// ✅ COOKIES DE SESSION POCKET OPTION
+const CI_SESSION = "a%3A4%3A%7Bs%3A10%3A%22session_id%22%3Bs%3A32%3A%22f36579ce10258d2e2d8c1d968e3f22a5%22%3Bs%3A10%3A%22ip_address%22%3Bs%3A13%3A%22156.0.214.220%22%3Bs%3A10%3A%22user_agent%22%3Bs%3A68%3A%22Mozilla%2F5.0%20%28Android%2013%3B%20Mobile%3B%20rv%3A150.0%29%20Gecko%2F150.0%20Firefox%2F150.0%22%3Bs%3A13%3A%22last_activity%22%3Bi%3A1778014235%3B%7Ddad3757b31f62d32c34d8b74958861e5";
+const AUTOLOGIN = "a%3A2%3A%7Bs%3A6%3A%22key_id%22%3Bs%3A16%3A%2219b7f421d8d9e912%22%3Bs%3A7%3A%22user_id%22%3Bs%3A8%3A%2299154142%22%3B%7D";
+const USER_AGENT = "Mozilla/5.0 (Android 13; Mobile; rv:150.0) Gecko/150.0 Firefox/150.0";
+
+// ✅ PROXY DECODO ISP STATIQUE (mot de passe correct : lQ4iibFeya87QSd6_e)
+const PROXY_URL = 'http://spr5gith3k:lQ4iibFeya87QSd6_e@isp.decodo.com:10007';
 const proxyAgent = new HttpsProxyAgent(PROXY_URL);
 
-// Identifiants Pocket Option (variables d'environnement Render)
-const PO_EMAIL = process.env.PO_EMAIL || '';
-const PO_PASSWORD = process.env.PO_PASSWORD || '';
-
-let cookieString = '';
 let prices = {};
 let ws = null;
 
-async function loginAndGetCookies() {
-  try {
-    const client = axios.create({
-      httpsAgent: proxyAgent,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
-        'Accept-Language': 'fr-FR,fr;q=0.9',
-      }
-    });
-
-    console.log('🔵 Récupération page d’accueil...');
-    const homeResp = await client.get('https://pocketoption.com/', {
-      headers: { 'Referer': 'https://www.google.com/' }
-    });
-    console.log('✅ Page d’accueil reçue (status ' + homeResp.status + ')');
-
-    console.log('🔵 Tentative de connexion en JSON...');
-    const loginResp = await client.post('https://pocketoption.com/api/auth/login', 
-      {
-        email: PO_EMAIL,
-        password: PO_PASSWORD,
-        remember: 1
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Origin': 'https://pocketoption.com',
-          'Referer': 'https://pocketoption.com/login',
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      }
-    );
-
-    console.log('✅ Réponse login status ' + loginResp.status);
-
-    const setCookie = loginResp.headers['set-cookie'];
-    if (setCookie) {
-      cookieString = setCookie.join('; ');
-      console.log('✅ Cookies récupérés : ' + cookieString.substring(0, 80) + '...');
-    } else {
-      console.log('⚠️ Aucun cookie reçu, contenu de la réponse : ' + JSON.stringify(loginResp.data));
-    }
-    return true;
-  } catch (e) {
-    console.error('❌ Échec authentification :', e.response?.status, e.message);
-    return false;
-  }
-}
-
 function connectPO() {
-  if (!cookieString) {
-    console.log('⏳ Pas encore de cookie, nouvelle tentative dans 5s');
-    setTimeout(connectPO, 5000);
-    return;
-  }
+  if (ws) return;
 
   console.log('🔵 Connexion WebSocket...');
   ws = new WebSocket("wss://api-l.po.market/socket.io/?EIO=4&transport=websocket", {
     agent: proxyAgent,
     headers: {
       'Origin': 'https://pocketoption.com',
-      'Cookie': cookieString,
-      'User-Agent': 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+      'Cookie': `ci_session=${CI_SESSION}; autologin=${AUTOLOGIN}`,
+      'User-Agent': USER_AGENT,
       'Referer': 'https://pocketoption.com/trading',
       'Accept-Encoding': 'gzip, deflate, br',
       'Connection': 'Upgrade',
@@ -130,20 +75,9 @@ app.get('/prices', (req, res) => {
 
 app.get('/', (req, res) => res.send('Pocket Proxy v2 actif'));
 
-(async () => {
-  if (!PO_EMAIL || !PO_PASSWORD) {
-    console.error('❌ PO_EMAIL et PO_PASSWORD manquants');
-    return;
-  }
-  const ok = await loginAndGetCookies();
-  if (ok) {
-    connectPO();
-    setInterval(async () => {
-      await loginAndGetCookies();
-      if (ws) ws.close();
-    }, 5 * 60 * 60 * 1000);
-  }
-})();
+// Démarrage
+connectPO();
 
 const PORT = process.env.PORT || 3456;
-app.listen(PORT, () => console.log(`🚀 Proxy prêt sur port ${PORT}`));      
+app.listen(PORT, () => console.log(`🚀 Proxy prêt sur port ${PORT}`));  
+  
