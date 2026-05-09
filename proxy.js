@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // Proxy Decodo (sticky session)
-const PROXY_URL = 'http://spjfzd4lq7:7Bt17qtmtil4Ft_wIN@gate.decodo.com:10005';
+const PROXY_URL = 'http://spr5gith3k:lQ4iibFeya87QSd6_e@isp.decodo.com:10007';
 const proxyAgent = new HttpsProxyAgent(PROXY_URL);
 
 // Identifiants Pocket Option (définis dans les variables d'environnement Render)
