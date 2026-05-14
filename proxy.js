@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const puppeteer = require('puppeteer');
 const WebSocket = require('ws');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 
@@ -7,31 +8,62 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ COOKIES DE SESSION POCKET OPTION
-const CI_SESSION = "a%3A4%3A%7Bs%3A10%3A%22session_id%22%3Bs%3A32%3A%22f36579ce10258d2e2d8c1d968e3f22a5%22%3Bs%3A10%3A%22ip_address%22%3Bs%3A13%3A%22156.0.214.220%22%3Bs%3A10%3A%22user_agent%22%3Bs%3A68%3A%22Mozilla%2F5.0%20%28Android%2013%3B%20Mobile%3B%20rv%3A150.0%29%20Gecko%2F150.0%20Firefox%2F150.0%22%3Bs%3A13%3A%22last_activity%22%3Bi%3A1778014235%3B%7Ddad3757b31f62d32c34d8b74958861e5";
-const AUTOLOGIN = "a%3A2%3A%7Bs%3A6%3A%22key_id%22%3Bs%3A16%3A%2219b7f421d8d9e912%22%3Bs%3A7%3A%22user_id%22%3Bs%3A8%3A%2299154142%22%3B%7D";
-const USER_AGENT = "Mozilla/5.0 (Android 13; Mobile; rv:150.0) Gecko/150.0 Firefox/150.0";
+const PO_EMAIL = process.env.PO_EMAIL || '';
+const PO_PASSWORD = process.env.PO_PASSWORD || '';
 
-// ✅ PROXY DECODO ISP STATIQUE
-const PROXY_URL = 'http://spr5gith3k:lQ4iibFeya87QSd6_e@isp.decodo.com:10007';
-const proxyAgent = new HttpsProxyAgent(PROXY_URL);
-
+let cookieString = '';
 let prices = {};
 let ws = null;
 
-function connectPO() {
-  if (ws) return;
+async function loginWithPuppeteer() {
+  console.log('🔵 Lancement du navigateur...');
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
+  const page = await browser.newPage();
 
-  console.log('🔵 Connexion WebSocket...');
-  // Utilisation de l'URL précise avec le bon endpoint et le paramètre EIO
+  try {
+    await page.goto('https://pocketoption.com/login', { waitUntil: 'networkidle2' });
+    console.log('✅ Page de login chargée');
+
+    // Remplir le formulaire
+    await page.type('input[name="email"]', PO_EMAIL);
+    await page.type('input[name="password"]', PO_PASSWORD);
+    
+    // Cliquer sur le bouton de connexion
+    await page.click('button[type="submit"]');
+    await page.waitForNavigation({ waitUntil: 'networkidle2' });
+    console.log('✅ Connexion réussie');
+
+    // Récupérer les cookies
+    const cookies = await page.cookies();
+    cookieString = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+    console.log('✅ Cookies récupérés :', cookieString.substring(0, 80) + '...');
+
+    await browser.close();
+    return true;
+  } catch (e) {
+    console.error('❌ Erreur Puppeteer :', e.message);
+    await browser.close();
+    return false;
+  }
+}
+
+function connectPO() {
+  if (!cookieString) {
+    console.log('⏳ Pas de cookie, nouvelle tentative...');
+    setTimeout(connectPO, 5000);
+    return;
+  }
+
+  // Pas besoin de proxy : Puppeteer a déjà authentifié l'IP de Render
   ws = new WebSocket("wss://ws-l.po.market/socket.io/?EIO=4&transport=websocket", {
-    agent: proxyAgent,
     headers: {
       'Origin': 'https://pocketoption.com',
-      'Cookie': `ci_session=${CI_SESSION}; autologin=${AUTOLOGIN}`,
-      'User-Agent': USER_AGENT,
+      'Cookie': cookieString,
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Referer': 'https://pocketoption.com/trading',
-      'Accept-Encoding': 'gzip, deflate, br',
       'Connection': 'Upgrade',
       'Upgrade': 'websocket',
     }
@@ -63,7 +95,7 @@ function connectPO() {
 
   ws.on('close', () => {
     ws = null;
-    console.log('🔴 Déconnecté, reconnexion dans 5s');
+    console.log('🔴 Déconnecté, reconnexion...');
     setTimeout(connectPO, 5000);
   });
 
@@ -74,10 +106,16 @@ app.get('/prices', (req, res) => {
   res.json({ connected: ws && ws.readyState === 1, prices });
 });
 
-app.get('/', (req, res) => res.send('Pocket Proxy v2 actif'));
+app.get('/', (req, res) => res.send('Pocket Proxy v3 (Puppeteer)'));
 
-// Démarrage
-connectPO();
+(async () => {
+  if (!PO_EMAIL || !PO_PASSWORD) {
+    console.error('❌ PO_EMAIL et PO_PASSWORD manquants');
+    return;
+  }
+  const ok = await loginWithPuppeteer();
+  if (ok) connectPO();
+})();
 
 const PORT = process.env.PORT || 3456;
 app.listen(PORT, () => console.log(`🚀 Proxy prêt sur port ${PORT}`));
