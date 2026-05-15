@@ -1,6 +1,7 @@
-  const express = require('express');
+const express = require('express');
 const cors = require('cors');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium');
 const WebSocket = require('ws');
 
 const app = express();
@@ -17,21 +18,27 @@ let ws = null;
 async function loginWithPuppeteer() {
   console.log('🔵 Lancement du navigateur...');
   const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+    ignoreHTTPSErrors: true,
   });
+
   const page = await browser.newPage();
 
   try {
     await page.goto('https://pocketoption.com/login', { waitUntil: 'networkidle2' });
     console.log('✅ Page de login chargée');
 
+    // Remplir le formulaire
     await page.type('input[name="email"]', PO_EMAIL);
     await page.type('input[name="password"]', PO_PASSWORD);
     await page.click('button[type="submit"]');
     await page.waitForNavigation({ waitUntil: 'networkidle2' });
     console.log('✅ Connexion réussie');
 
+    // Récupérer les cookies
     const cookies = await page.cookies();
     cookieString = cookies.map(c => `${c.name}=${c.value}`).join('; ');
     console.log('✅ Cookies récupérés :', cookieString.substring(0, 80) + '...');
@@ -112,4 +119,4 @@ app.get('/', (req, res) => res.send('Pocket Proxy v3 (Puppeteer)'));
 })();
 
 const PORT = process.env.PORT || 3456;
-app.listen(PORT, () => console.log(`🚀 Proxy prêt sur port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Proxy prêt sur port ${PORT}`));        
