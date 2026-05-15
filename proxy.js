@@ -1,8 +1,7 @@
-const express = require('express');
+  const express = require('express');
 const cors = require('cors');
 const puppeteer = require('puppeteer');
 const WebSocket = require('ws');
-const { HttpsProxyAgent } = require('https-proxy-agent');
 
 const app = express();
 app.use(cors());
@@ -19,7 +18,6 @@ async function loginWithPuppeteer() {
   console.log('🔵 Lancement du navigateur...');
   const browser = await puppeteer.launch({
     headless: true,
-    executablePath: '/opt/render/.cache/puppeteer/chrome/linux-127.0.6533.88/chrome-linux64/chrome',
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
   const page = await browser.newPage();
@@ -114,4 +112,4 @@ app.get('/', (req, res) => res.send('Pocket Proxy v3 (Puppeteer)'));
 })();
 
 const PORT = process.env.PORT || 3456;
-app.listen(PORT, () => console.log(`🚀 Proxy prêt sur port ${PORT}`));    
+app.listen(PORT, () => console.log(`🚀 Proxy prêt sur port ${PORT}`));
