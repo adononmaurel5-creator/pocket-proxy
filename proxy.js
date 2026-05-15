@@ -37,7 +37,7 @@ async function loginWithPuppeteer() {
   const page = await browser.newPage();
 
   try {
-    // Chargement de la page de login avec timeout étendu à 60 secondes
+    // Chargement de la page de login avec timeout étendu
     await page.goto('https://pocketoption.com/login', {
       waitUntil: 'networkidle2',
       timeout: 60000
@@ -47,12 +47,15 @@ async function loginWithPuppeteer() {
     await page.type('input[name="email"]', PO_EMAIL);
     await page.type('input[name="password"]', PO_PASSWORD);
 
-    // Clic sur le bouton + attente de la redirection avec timeout étendu
-    await Promise.all([
-      page.click('button[type="submit"]'),
-      page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 })
-    ]);
-    console.log('✅ Connexion réussie');
+    console.log('🔵 Clic sur connexion...');
+    await page.click('button[type="submit"]');
+
+    // Attendre que l'URL change (ne contient plus "login")
+    console.log('⏳ Attente du changement d\'URL...');
+    await page.waitForFunction(() => !window.location.href.includes('/login'), {
+      timeout: 90000
+    });
+    console.log('✅ Connexion réussie (URL changée)');
 
     const cookies = await page.cookies();
     cookieString = cookies.map(c => `${c.name}=${c.value}`).join('; ');
@@ -62,6 +65,16 @@ async function loginWithPuppeteer() {
     return true;
   } catch (e) {
     console.error('❌ Erreur Puppeteer :', e.message);
+    // Même en cas d'erreur, essayer de récupérer les cookies si disponibles
+    try {
+      const cookies = await page.cookies();
+      if (cookies.length > 0) {
+        cookieString = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+        console.log('⚠️ Cookies récupérés malgré l\'erreur :', cookieString.substring(0, 80) + '...');
+        await browser.close();
+        return true;
+      }
+    } catch {}
     await browser.close();
     return false;
   }
