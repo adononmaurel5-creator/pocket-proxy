@@ -18,7 +18,16 @@ let ws = null;
 async function loginWithPuppeteer() {
   console.log('🔵 Lancement du navigateur...');
   const browser = await puppeteer.launch({
-    args: chromium.args,
+    args: [
+      ...chromium.args,
+      '--single-process',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-extensions',
+      '--disable-background-networking',
+      '--disable-sync',
+      '--no-zygote',
+    ],
     defaultViewport: chromium.defaultViewport,
     executablePath: await chromium.executablePath(),
     headless: chromium.headless,
@@ -31,14 +40,12 @@ async function loginWithPuppeteer() {
     await page.goto('https://pocketoption.com/login', { waitUntil: 'networkidle2' });
     console.log('✅ Page de login chargée');
 
-    // Remplir le formulaire
     await page.type('input[name="email"]', PO_EMAIL);
     await page.type('input[name="password"]', PO_PASSWORD);
     await page.click('button[type="submit"]');
     await page.waitForNavigation({ waitUntil: 'networkidle2' });
     console.log('✅ Connexion réussie');
 
-    // Récupérer les cookies
     const cookies = await page.cookies();
     cookieString = cookies.map(c => `${c.name}=${c.value}`).join('; ');
     console.log('✅ Cookies récupérés :', cookieString.substring(0, 80) + '...');
@@ -54,7 +61,6 @@ async function loginWithPuppeteer() {
 
 function connectPO() {
   if (!cookieString) {
-    console.log('⏳ Pas de cookie, nouvelle tentative...');
     setTimeout(connectPO, 5000);
     return;
   }
@@ -119,4 +125,4 @@ app.get('/', (req, res) => res.send('Pocket Proxy v3 (Puppeteer)'));
 })();
 
 const PORT = process.env.PORT || 3456;
-app.listen(PORT, () => console.log(`🚀 Proxy prêt sur port ${PORT}`));        
+app.listen(PORT, () => console.log(`🚀 Proxy prêt sur port ${PORT}`));
