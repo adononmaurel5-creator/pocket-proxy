@@ -42,8 +42,12 @@ async function loginWithPuppeteer() {
 
     await page.type('input[name="email"]', PO_EMAIL);
     await page.type('input[name="password"]', PO_PASSWORD);
-    await page.click('button[type="submit"]');
-    await page.waitForNavigation({ waitUntil: 'networkidle2' });
+
+    // Clic + attente avec timeout étendu (60 secondes)
+    await Promise.all([
+      page.click('button[type="submit"]'),
+      page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 })
+    ]);
     console.log('✅ Connexion réussie');
 
     const cookies = await page.cookies();
@@ -61,10 +65,12 @@ async function loginWithPuppeteer() {
 
 function connectPO() {
   if (!cookieString) {
+    console.log('⏳ Pas de cookie, nouvelle tentative dans 5s...');
     setTimeout(connectPO, 5000);
     return;
   }
 
+  console.log('🔵 Connexion WebSocket...');
   ws = new WebSocket("wss://ws-l.po.market/socket.io/?EIO=4&transport=websocket", {
     headers: {
       'Origin': 'https://pocketoption.com',
@@ -102,7 +108,7 @@ function connectPO() {
 
   ws.on('close', () => {
     ws = null;
-    console.log('🔴 Déconnecté, reconnexion...');
+    console.log('🔴 Déconnecté, reconnexion dans 5s...');
     setTimeout(connectPO, 5000);
   });
 
