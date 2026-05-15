@@ -37,13 +37,17 @@ async function loginWithPuppeteer() {
   const page = await browser.newPage();
 
   try {
-    await page.goto('https://pocketoption.com/login', { waitUntil: 'networkidle2' });
+    // Chargement de la page de login avec timeout étendu à 60 secondes
+    await page.goto('https://pocketoption.com/login', {
+      waitUntil: 'networkidle2',
+      timeout: 60000
+    });
     console.log('✅ Page de login chargée');
 
     await page.type('input[name="email"]', PO_EMAIL);
     await page.type('input[name="password"]', PO_PASSWORD);
 
-    // Clic + attente avec timeout étendu (60 secondes)
+    // Clic sur le bouton + attente de la redirection avec timeout étendu
     await Promise.all([
       page.click('button[type="submit"]'),
       page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 })
