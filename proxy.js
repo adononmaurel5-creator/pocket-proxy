@@ -88,7 +88,7 @@ function connectPO() {
   }
 
   console.log('🔵 Connexion WebSocket...');
-  ws = new WebSocket("wss://ws-l.po.market/socket.io/?EIO=4&transport=websocket", {
+  ws = new WebSocket("wss://api-l.po.market/socket.io/?EIO=4&transport=websocket", {
     headers: {
       'Origin': 'https://pocketoption.com',
       'Cookie': cookieString,
